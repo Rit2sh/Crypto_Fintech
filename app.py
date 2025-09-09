@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-# Add WhiteNoise to serve static files
+# Add WhiteNoise to serve static files in production
 from whitenoise import WhiteNoise
 
 # Configure logging
@@ -23,10 +23,11 @@ login_manager = LoginManager()
 app = Flask(__name__)
 
 # --- Configuration ---
-app.secret_key = os.environ.get("SESSION_SECRET", "a-secure-secret-key-that-you-should-change")
+app.secret_key = os.environ.get("SESSION_SECRET", "a-default-secret-key-that-you-should-change")
 
-# Serve static files from the 'static/' directory
+# Serve static files from the 'static/' directory using WhiteNoise
 app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
+# Apply ProxyFix to handle headers from a proxy server like Render's
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 
@@ -59,8 +60,8 @@ def load_user(user_id):
 # --- Import Routes ---
 import routes
 
-# --- Database Creation (Run once before first deploy) ---
-# Use a separate script to create the database
+# --- Database Creation ---
+# This block is now commented out. Use the separate create_db.py script.
 # with app.app_context():
 #     db.create_all()
 

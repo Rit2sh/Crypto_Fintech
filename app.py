@@ -18,13 +18,10 @@ db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
 
 # --- Create the Flask App ---
-# Vercel will look for this 'app' object
 app = Flask(__name__)
 
 # --- Configuration ---
-# Use environment variables for sensitive data
 app.secret_key = os.environ.get("SESSION_SECRET", "crypto-fintech-secret-key-2024")
-# Use Vercel's proxy fix to ensure correct request information
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Database configuration
@@ -35,22 +32,23 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# --- Initialize Extensions with the App ---
+# --- Initialize Extensions ---
 db.init_app(app)
 login_manager.init_app(app)
 
 # --- Flask-Login Configuration ---
-login_manager.login_view = 'login'  # The route for the login page
+login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
 @login_manager.user_loader
 def load_user(user_id):
-    # Import here to avoid circular dependencies
-    from models import User
+    from models import User  # avoid circular imports
     return User.query.get(int(user_id))
 
 # --- Import Routes ---
-# Import your routes after the app object is fully configured
-# This assumes you have a routes.py file
-import routes
+import routes   # this will register your routes.py
+
+# --- Run only for local dev (Render uses gunicorn) ---
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

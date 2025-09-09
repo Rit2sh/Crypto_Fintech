@@ -2,6 +2,6 @@ Flask
 Flask-SQLAlchemy
 Flask-Login
 gunicorn
-psycopg2-binary # Or the driver for your specific database
-PyMongo # If you are still using MongoDB
-werkzeug
+psycopg2-binary
+PyMongo
+Werkzeug

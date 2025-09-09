@@ -24,8 +24,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "crypto-fintech-secret-key-2024")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Database configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///crypto_platform.db")
+# --- Database configuration ---
+db_url = os.environ.get("DATABASE_URL")
+
+# Fix for Render's old-style Postgres URLs
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///crypto_platform.db"
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
@@ -47,8 +53,10 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # --- Import Routes ---
-import routes   # this will register your routes.py
+import routes   # make sure routes.py exists
 
 # --- Run only for local dev (Render uses gunicorn) ---
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()  # create tables locally (safe to remove later for prod)
     app.run(host="0.0.0.0", port=5000, debug=True)

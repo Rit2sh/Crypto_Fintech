@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CryptoFintech Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Enhanced Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="hero-welcome p-4 rounded-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-2 text-white">
+                            <i class="fas fa-chart-line me-2"></i>Welcome back, {{ current_user.first_name }}!
+                        </h1>
+                        <p class="lead mb-0 text-white-50">Monitor your portfolio and manage your digital assets</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-{{ 'success' if current_user.is_kyc_verified else 'warning' }} fs-6 px-3 py-2">
+                                <i class="fas fa-{{ 'check-circle' if current_user.is_kyc_verified else 'exclamation-triangle' }} me-1"></i>
+                                KYC {{ 'Verified' if current_user.is_kyc_verified else 'Pending' }}
+                            </span>
+                            {% if not current_user.is_kyc_verified %}
+                            <a href="{{ url_for('kyc') }}" class="btn btn-light btn-sm">
+                                <i class="fas fa-shield-alt me-1"></i>Complete KYC
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Portfolio Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="dashboard-widget widget-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="widget-icon mb-3">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <h6 class="widget-label mb-2">Total Portfolio Value</h6>
+                            <div class="widget-value">₹{{ "{:,.0f}".format(portfolio_value) }}</div>
+                            <small class="opacity-75">+2.5% from yesterday</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="dashboard-widget widget-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="widget-icon mb-3">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <h6 class="widget-label mb-2">Active Wallets</h6>
+                            <div class="widget-value">{{ wallets|length }}</div>
+                            <small class="opacity-75">{{ wallets|selectattr('balance', '>', 0)|list|length }} with balance</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="dashboard-widget widget-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="widget-icon mb-3">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <h6 class="widget-label mb-2">Total Transactions</h6>
+                            <div class="widget-value">{{ transactions|length }}</div>
+                            <small class="opacity-75">{{ transactions|selectattr('status', 'equalto', 'completed')|list|length }} completed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="dashboard-widget widget-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="widget-icon mb-3">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h6 class="widget-label mb-2">Security Score</h6>
+                            <div class="widget-value">{{ '95%' if current_user.is_kyc_verified else '65%' }}</div>
+                            <small class="opacity-75">{{ 'Excellent' if current_user.is_kyc_verified else 'Good - Complete KYC' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Wallet Balances -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-wallet text-primary me-2"></i>Wallet Balances
+                    </h5>
+                    <a href="{{ url_for('wallet') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Currency</th>
+                                    <th>Balance</th>
+                                    <th>USD Value</th>
+                                    <th>INR Value</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wallet in wallets %}
+                                    {% if wallet.balance > 0 %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if wallet.currency == 'BTC' %}
+                                                    <i class="fab fa-bitcoin text-warning me-2"></i>
+                                                {% elif wallet.currency == 'ETH' %}
+                                                    <i class="fab fa-ethereum text-primary me-2"></i>
+                                                {% elif wallet.currency == 'USDT' %}
+                                                    <i class="fas fa-coins text-success me-2"></i>
+                                                {% elif wallet.currency == 'INR' %}
+                                                    <i class="fas fa-rupee-sign text-info me-2"></i>
+                                                {% else %}
+                                                    <i class="fas fa-dollar-sign text-secondary me-2"></i>
+                                                {% endif %}
+                                                <strong>{{ wallet.currency }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>{{ "{:,.6f}".format(wallet.balance) }}</td>
+                                        <td>
+                                            {% if wallet.currency == 'USD' %}
+                                                ${{ "{:,.2f}".format(wallet.balance) }}
+                                            {% elif wallet.currency == 'INR' %}
+                                                ${{ "{:,.2f}".format(wallet.balance / 83.12) }}
+                                            {% else %}
+                                                ${{ "{:,.2f}".format(wallet.balance * wallet.get_current_price()) }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if wallet.currency == 'INR' %}
+                                                ₹{{ "{:,.2f}".format(wallet.balance) }}
+                                            {% elif wallet.currency == 'USD' %}
+                                                ₹{{ "{:,.2f}".format(wallet.balance * 83.12) }}
+                                            {% else %}
+                                                ₹{{ "{:,.2f}".format(wallet.balance * wallet.get_current_price() * 83.12) }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('trading') }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-exchange-alt me-1"></i>Trade
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions & Market Prices -->
+        <div class="col-lg-4">
+            <!-- Recent Transactions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history text-info me-2"></i>Recent Transactions
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if transactions %}
+                        {% for transaction in transactions %}
+                        <div class="d-flex align-items-center p-3 border-bottom">
+                            <div class="me-3">
+                                {% if transaction.transaction_type == 'buy' %}
+                                    <i class="fas fa-plus-circle text-success"></i>
+                                {% elif transaction.transaction_type == 'sell' %}
+                                    <i class="fas fa-minus-circle text-danger"></i>
+                                {% elif transaction.transaction_type == 'send' %}
+                                    <i class="fas fa-paper-plane text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-exchange-alt text-info"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">
+                                    {{ transaction.transaction_type.title() }}
+                                    {% if transaction.from_currency != transaction.to_currency %}
+                                        {{ transaction.from_currency }} → {{ transaction.to_currency }}
+                                    {% else %}
+                                        {{ transaction.from_currency }}
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ transaction.created_at.strftime('%b %d, %Y %I:%M %p') }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">
+                                    {{ "{:,.4f}".format(transaction.amount) }}
+                                </div>
+                                <small class="badge bg-{{ 'success' if transaction.status == 'completed' else 'warning' }}">
+                                    {{ transaction.status.title() }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-3 text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No transactions yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('profile') }}" class="text-decoration-none">
+                        View All Transactions <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Market Prices -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line text-success me-2"></i>Live Market Prices
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if prices %}
+                        {% for coin_id, data in prices.items() %}
+                        <div class="d-flex align-items-center p-3 border-bottom">
+                            <div class="me-3">
+                                {% if coin_id == 'bitcoin' %}
+                                    <i class="fab fa-bitcoin text-warning fa-lg"></i>
+                                {% elif coin_id == 'ethereum' %}
+                                    <i class="fab fa-ethereum text-primary fa-lg"></i>
+                                {% else %}
+                                    <i class="fas fa-coins text-success fa-lg"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">
+                                    {% if coin_id == 'bitcoin' %}BTC
+                                    {% elif coin_id == 'ethereum' %}ETH
+                                    {% else %}USDT{% endif %}
+                                </div>
+                                <small class="text-muted">${{ "{:,.2f}".format(data.usd) }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% set change = data.get('usd_24h_change', 0) %}
+                                <div class="text-{{ 'success' if change >= 0 else 'danger' }}">
+                                    <i class="fas fa-{{ 'arrow-up' if change >= 0 else 'arrow-down' }} me-1"></i>
+                                    {{ "{:+.2f}".format(change) }}%
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="quick-actions">
+                <h5 class="mb-4">
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('trading') }}" class="quick-action-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h6>Trade Crypto</h6>
+                            <p>Buy & Sell digital assets</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('payments') }}" class="quick-action-card">
+                            <i class="fas fa-paper-plane"></i>
+                            <h6>Send Payment</h6>
+                            <p>Global P2P transfers</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('wallet') }}" class="quick-action-card">
+                            <i class="fas fa-wallet"></i>
+                            <h6>Manage Wallets</h6>
+                            <p>View & organize assets</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        {% if not current_user.is_kyc_verified %}
+                        <a href="{{ url_for('kyc') }}" class="quick-action-card">
+                            <i class="fas fa-shield-alt"></i>
+                            <h6>Complete KYC</h6>
+                            <p>Verify your identity</p>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('profile') }}" class="quick-action-card">
+                            <i class="fas fa-user-cog"></i>
+                            <h6>Profile Settings</h6>
+                            <p>Manage your account</p>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}CryptoFintech Platform - Home{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-gradient text-white py-5">
+    <div class="hero-background"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 hero-content">
+                <div class="hero-badge mb-4">
+                    <span class="badge bg-light text-primary px-3 py-2">
+                        <i class="fas fa-shield-alt me-2"></i>Bank-Grade Security
+                    </span>
+                </div>
+                <h1 class="display-3 fw-bold mb-4 hero-title">
+                    The Future of <span class="text-gradient">Digital Finance</span>
+                </h1>
+                <p class="lead mb-4 hero-subtitle">
+                    Experience seamless crypto trading, instant global payments, and secure wallet management. 
+                    Built for India and the world with cutting-edge technology and regulatory compliance.
+                </p>
+                <div class="hero-stats mb-4">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Active Users</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">₹10Cr+</div>
+                            <div class="stat-label">Traded Volume</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 flex-wrap hero-actions">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg shadow-lg">
+                        <i class="fas fa-rocket me-2"></i>Start Trading Now
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-play-circle me-2"></i>Watch Demo
+                    </a>
+                </div>
+                <div class="hero-trust mt-4">
+                    <small class="opacity-75">
+                        <i class="fas fa-check-circle me-2"></i>RBI Compliant
+                        <i class="fas fa-check-circle me-2 ms-3"></i>SEBI Regulated
+                        <i class="fas fa-check-circle me-2 ms-3"></i>ISO 27001 Certified
+                    </small>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center hero-visual">
+                <div class="crypto-showcase">
+                    <div class="floating-card card-1">
+                        <i class="fab fa-bitcoin text-warning"></i>
+                        <span>Bitcoin</span>
+                        <small class="text-success">+5.2%</small>
+                    </div>
+                    <div class="floating-card card-2">
+                        <i class="fab fa-ethereum text-primary"></i>
+                        <span>Ethereum</span>
+                        <small class="text-success">+3.8%</small>
+                    </div>
+                    <div class="floating-card card-3">
+                        <i class="fas fa-coins text-success"></i>
+                        <span>USDT</span>
+                        <small class="text-muted">0.0%</small>
+                    </div>
+                    <div class="main-crypto-icon">
+                        <div class="crypto-ring"></div>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Crypto Prices -->
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-5">
+                <i class="fas fa-chart-line me-2 text-primary"></i>Live Crypto Prices
+            </h2>
+        </div>
+    </div>
+    <div class="row">
+        {% if prices %}
+            {% for coin_id, data in prices.items() %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm crypto-card">
+                        <div class="card-body text-center">
+                            <div class="crypto-icon mb-3">
+                                {% if coin_id == 'bitcoin' %}
+                                    <i class="fab fa-bitcoin text-warning" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-2">Bitcoin (BTC)</h5>
+                                {% elif coin_id == 'ethereum' %}
+                                    <i class="fab fa-ethereum text-primary" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-2">Ethereum (ETH)</h5>
+                                {% else %}
+                                    <i class="fas fa-coins text-success" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-2">Tether (USDT)</h5>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="price-info">
+                                <h4 class="text-primary mb-1">
+                                    ${{ "{:,.2f}".format(data.usd) }}
+                                </h4>
+                                <p class="text-muted mb-2">
+                                    ₹{{ "{:,.2f}".format(data.inr) }}
+                                </p>
+                                
+                                {% set change = data.get('usd_24h_change', 0) %}
+                                <span class="badge {{ 'bg-success' if change >= 0 else 'bg-danger' }}">
+                                    <i class="fas fa-{{ 'arrow-up' if change >= 0 else 'arrow-down' }} me-1"></i>
+                                    {{ "{:+.2f}".format(change) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Unable to load live prices. Please check your connection.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">Why Choose Our Platform?</h2>
+                <p class="lead text-muted">Experience the future of digital finance with our comprehensive solution</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-shield-alt text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Bank-Grade Security</h4>
+                    <p class="text-muted">
+                        Multi-layer security with 2FA, encrypted transactions, and compliance with global standards.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-exchange-alt text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Real-time Trading</h4>
+                    <p class="text-muted">
+                        Trade cryptocurrencies with real-time prices, instant conversions, and competitive fees.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-globe text-info" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Global Payments</h4>
+                    <p class="text-muted">
+                        Send money anywhere in the world with support for INR, USD, and major cryptocurrencies.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-id-card text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>KYC Compliance</h4>
+                    <p class="text-muted">
+                        Fully compliant with RBI, SEBI, and international regulations for secure transactions.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-mobile-alt text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>Mobile First</h4>
+                    <p class="text-muted">
+                        Responsive design optimized for mobile devices with intuitive user experience.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card h-100 p-4 bg-white rounded shadow-sm text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-headset text-secondary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>24/7 Support</h4>
+                    <p class="text-muted">
+                        Round-the-clock customer support with multilingual assistance for all users.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-4">Ready to Start Your Crypto Journey?</h2>
+                <p class="lead mb-4">
+                    Join thousands of users who trust our platform for secure crypto trading and global payments.
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    animation: backgroundShift 20s ease-in-out infinite;
+}
+
+@keyframes backgroundShift {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    50% { transform: translateX(-20px) translateY(-20px); }
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.hero-content > * {
+    animation: slideInLeft 1s ease-out;
+    animation-fill-mode: both;
+}
+
+.hero-content .hero-badge { animation-delay: 0.1s; }
+.hero-content .hero-title { animation-delay: 0.2s; }
+.hero-content .hero-subtitle { animation-delay: 0.3s; }
+.hero-content .hero-stats { animation-delay: 0.4s; }
+.hero-content .hero-actions { animation-delay: 0.5s; }
+.hero-content .hero-trust { animation-delay: 0.6s; }
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.hero-visual {
+    animation: slideInRight 1s ease-out 0.3s both;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-stats .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.hero-stats .stat-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    color: white;
+}
+
+.crypto-showcase {
+    position: relative;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-card {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-weight: 500;
+    animation: float 4s ease-in-out infinite;
+}
+
+.floating-card i {
+    font-size: 2rem;
+}
+
+.floating-card span {
+    font-size: 0.875rem;
+}
+
+.floating-card small {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.card-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.card-2 {
+    top: 60%;
+    right: 5%;
+    animation-delay: 1s;
+}
+
+.card-3 {
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 2s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-15px) rotate(1deg); }
+    66% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+.main-crypto-icon {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.main-crypto-icon i {
+    font-size: 4rem;
+    color: white;
+    z-index: 2;
+}
+
+.crypto-ring {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    border-top-color: rgba(255, 255, 255, 0.6);
+    animation: spin 8s linear infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 20px rgba(255, 255, 255, 0);
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.crypto-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.crypto-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+}
+
+.feature-card {
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+}
+
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 70vh;
+        padding: 2rem 0;
+    }
+    
+    .crypto-showcase {
+        height: 300px;
+    }
+    
+    .main-crypto-icon {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .main-crypto-icon i {
+        font-size: 3rem;
+    }
+    
+    .floating-card {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .floating-card i {
+        font-size: 1.5rem;
+    }
+    
+    .hero-stats .stat-number {
+        font-size: 1.25rem;
+    }
+}
+</style>
+{% endblock %}

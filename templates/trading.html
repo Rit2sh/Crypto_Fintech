@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Trading - CryptoFintech Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-chart-line text-primary me-2"></i>Crypto Trading
+            </h1>
+            <p class="text-muted">Convert between cryptocurrencies and fiat currencies</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Trading Form -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt text-success me-2"></i>Currency Exchange
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="tradingForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.transaction_type.id }}" class="form-label">
+                                <i class="fas fa-cog me-2"></i>Transaction Type
+                            </label>
+                            {{ form.transaction_type(class="form-select", id="transactionType") }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.from_currency.id }}" class="form-label">
+                                    <i class="fas fa-minus-circle me-2 text-danger"></i>From Currency
+                                </label>
+                                {{ form.from_currency(class="form-select", id="fromCurrency") }}
+                                <div id="fromBalance" class="form-text"></div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.to_currency.id }}" class="form-label">
+                                    <i class="fas fa-plus-circle me-2 text-success"></i>To Currency
+                                </label>
+                                {{ form.to_currency(class="form-select", id="toCurrency") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.amount.id }}" class="form-label">
+                                <i class="fas fa-calculator me-2"></i>Amount
+                            </label>
+                            <div class="input-group">
+                                {{ form.amount(class="form-control", id="amountInput", step="0.000001", placeholder="Enter amount") }}
+                                <span class="input-group-text" id="fromCurrencyDisplay">Currency</span>
+                            </div>
+                            {% if form.amount.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.amount.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Exchange Rate Display -->
+                        <div class="card bg-light mb-3" id="exchangeRateCard" style="display: none;">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <h6 class="text-muted">You Send</h6>
+                                        <h5 id="sendAmount" class="text-danger">0</h5>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-arrow-right fa-2x text-primary"></i>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-muted">You Receive</h6>
+                                        <h5 id="receiveAmount" class="text-success">0</h5>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row text-center">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Exchange Rate</small>
+                                        <div id="exchangeRate" class="fw-bold">1:1</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Transaction Fee</small>
+                                        <div id="transactionFee" class="fw-bold">0.1%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="recipientAddressDiv" style="display: none;">
+                            <label for="{{ form.recipient_address.id }}" class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>Recipient Address (Optional)
+                            </label>
+                            {{ form.recipient_address(class="form-control", placeholder="Enter recipient address for send transactions") }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-exchange-alt me-2"></i>Execute Trade
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Prices & Charts -->
+        <div class="col-lg-6">
+            <!-- Live Prices -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line text-info me-2"></i>Live Market Prices
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if prices %}
+                        {% for coin_id, data in prices.items() %}
+                        <div class="d-flex align-items-center p-3 border-bottom price-item" 
+                             data-coin="{{ coin_id }}" 
+                             data-symbol="{{ 'BTC' if coin_id == 'bitcoin' else 'ETH' if coin_id == 'ethereum' else 'USDT' }}"
+                             data-price-usd="{{ data.usd }}"
+                             data-price-inr="{{ data.inr }}">
+                            <div class="me-3">
+                                {% if coin_id == 'bitcoin' %}
+                                    <i class="fab fa-bitcoin text-warning fa-lg"></i>
+                                {% elif coin_id == 'ethereum' %}
+                                    <i class="fab fa-ethereum text-primary fa-lg"></i>
+                                {% else %}
+                                    <i class="fas fa-coins text-success fa-lg"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">
+                                    {% if coin_id == 'bitcoin' %}Bitcoin (BTC)
+                                    {% elif coin_id == 'ethereum' %}Ethereum (ETH)
+                                    {% else %}Tether (USDT){% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    ${{ "{:,.2f}".format(data.usd) }} | ₹{{ "{:,.2f}".format(data.inr) }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                {% set change = data.get('usd_24h_change', 0) %}
+                                <div class="text-{{ 'success' if change >= 0 else 'danger' }}">
+                                    <i class="fas fa-{{ 'arrow-up' if change >= 0 else 'arrow-down' }} me-1"></i>
+                                    {{ "{:+.2f}".format(change) }}%
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Price Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-area text-primary me-2"></i>Price Chart
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="priceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trading Guidelines -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle text-warning me-2"></i>Trading Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-percentage text-primary fa-2x mb-2"></i>
+                                <h6>Low Fees</h6>
+                                <p class="small text-muted">0.1% trading fee on all conversions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-clock text-success fa-2x mb-2"></i>
+                                <h6>Instant Settlement</h6>
+                                <p class="small text-muted">Trades execute immediately at market rates</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-shield-alt text-warning fa-2x mb-2"></i>
+                                <h6>Secure Trading</h6>
+                                <p class="small text-muted">All transactions are encrypted and monitored</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line text-info fa-2x mb-2"></i>
+                                <h6>Real-time Rates</h6>
+                                <p class="small text-muted">Live market prices from CoinGecko API</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sample market data for chart
+const priceData = {
+    labels: ['6h ago', '5h ago', '4h ago', '3h ago', '2h ago', '1h ago', 'Now'],
+    datasets: [{
+        label: 'BTC Price (USD)',
+        data: [44800, 44950, 45100, 44850, 45200, 45050, 45000],
+        borderColor: '#f7931a',
+        backgroundColor: 'rgba(247, 147, 26, 0.1)',
+        tension: 0.4
+    }]
+};
+
+const ctx = document.getElementById('priceChart').getContext('2d');
+const priceChart = new Chart(ctx, {
+    type: 'line',
+    data: priceData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Trading form interactions
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amountInput');
+    const fromCurrency = document.getElementById('fromCurrency');
+    const toCurrency = document.getElementById('toCurrency');
+    const transactionType = document.getElementById('transactionType');
+    const exchangeRateCard = document.getElementById('exchangeRateCard');
+    const recipientAddressDiv = document.getElementById('recipientAddressDiv');
+    
+    // Mock exchange rates
+    const exchangeRates = {
+        'BTC': { 'USD': 45000, 'INR': 3742500, 'ETH': 14.06, 'USDT': 45000 },
+        'ETH': { 'USD': 3200, 'INR': 266240, 'BTC': 0.071, 'USDT': 3200 },
+        'USDT': { 'USD': 1.00, 'INR': 83.12, 'BTC': 0.000022, 'ETH': 0.0003125 },
+        'USD': { 'INR': 83.12, 'BTC': 0.000022, 'ETH': 0.0003125, 'USDT': 1.00 },
+        'INR': { 'USD': 0.012, 'BTC': 0.000000267, 'ETH': 0.00000376, 'USDT': 0.012 }
+    };
+    
+    function updateExchangeDisplay() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const from = fromCurrency.value;
+        const to = toCurrency.value;
+        
+        if (amount > 0 && from !== to) {
+            const rate = exchangeRates[from] ? exchangeRates[from][to] || 1 : 1;
+            const convertedAmount = amount * rate;
+            const fee = amount * 0.001; // 0.1% fee
+            
+            document.getElementById('sendAmount').textContent = `${amount.toFixed(6)} ${from}`;
+            document.getElementById('receiveAmount').textContent = `${convertedAmount.toFixed(6)} ${to}`;
+            document.getElementById('exchangeRate').textContent = `1 ${from} = ${rate.toFixed(6)} ${to}`;
+            document.getElementById('transactionFee').textContent = `${fee.toFixed(6)} ${from}`;
+            
+            exchangeRateCard.style.display = 'block';
+        } else {
+            exchangeRateCard.style.display = 'none';
+        }
+        
+        // Show recipient address for send transactions
+        if (transactionType.value === 'send') {
+            recipientAddressDiv.style.display = 'block';
+        } else {
+            recipientAddressDiv.style.display = 'none';
+        }
+        
+        // Update currency display
+        document.getElementById('fromCurrencyDisplay').textContent = from;
+    }
+    
+    // Event listeners
+    amountInput.addEventListener('input', updateExchangeDisplay);
+    fromCurrency.addEventListener('change', updateExchangeDisplay);
+    toCurrency.addEventListener('change', updateExchangeDisplay);
+    transactionType.addEventListener('change', updateExchangeDisplay);
+    
+    // Price item click handlers
+    document.querySelectorAll('.price-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const symbol = this.dataset.symbol;
+            if (symbol) {
+                fromCurrency.value = symbol;
+                updateExchangeDisplay();
+            }
+        });
+    });
+    
+    // Initial update
+    updateExchangeDisplay();
+});
+</script>
+{% endblock %}

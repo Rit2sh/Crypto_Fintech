@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet - CryptoFintech Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-wallet text-primary me-2"></i>My Wallets
+                    </h1>
+                    <p class="text-muted">Manage your crypto and fiat currencies</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('trading') }}" class="btn btn-primary">
+                        <i class="fas fa-exchange-alt me-2"></i>Trade Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-0">Total Portfolio Value</h4>
+                            <h2 class="mt-2 mb-0">
+                                ₹{{ "{:,.2f}".format(current_user.get_portfolio_value()) }}
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                ≈ ${{ "{:,.2f}".format(current_user.get_portfolio_value() / 83.12) }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="fas fa-chart-pie fa-4x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Cards -->
+    <div class="row">
+        {% for wallet in wallets %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card wallet-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="d-flex align-items-center mb-2">
+                                {% if wallet.currency == 'BTC' %}
+                                    <i class="fab fa-bitcoin text-warning fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0">Bitcoin</h5>
+                                        <small class="text-muted">BTC</small>
+                                    </div>
+                                {% elif wallet.currency == 'ETH' %}
+                                    <i class="fab fa-ethereum text-primary fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0">Ethereum</h5>
+                                        <small class="text-muted">ETH</small>
+                                    </div>
+                                {% elif wallet.currency == 'USDT' %}
+                                    <i class="fas fa-coins text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0">Tether</h5>
+                                        <small class="text-muted">USDT</small>
+                                    </div>
+                                {% elif wallet.currency == 'INR' %}
+                                    <i class="fas fa-rupee-sign text-info fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0">Indian Rupee</h5>
+                                        <small class="text-muted">INR</small>
+                                    </div>
+                                {% else %}
+                                    <i class="fas fa-dollar-sign text-secondary fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0">US Dollar</h5>
+                                        <small class="text-muted">USD</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if wallet.balance > 0 %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Empty</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Balance</span>
+                            <span class="fw-bold fs-5">
+                                {{ "{:,.6f}".format(wallet.balance) }} {{ wallet.currency }}
+                            </span>
+                        </div>
+                        
+                        {% if wallet.currency in ['BTC', 'ETH', 'USDT'] %}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-muted">USD Value</span>
+                                <span class="text-success">
+                                    ${{ "{:,.2f}".format(wallet.balance * wallet.get_current_price()) }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">INR Value</span>
+                                <span class="text-info">
+                                    ₹{{ "{:,.2f}".format(wallet.balance * wallet.get_current_price() * 83.12) }}
+                                </span>
+                            </div>
+                        {% elif wallet.currency == 'USD' %}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-muted">INR Value</span>
+                                <span class="text-info">
+                                    ₹{{ "{:,.2f}".format(wallet.balance * 83.12) }}
+                                </span>
+                            </div>
+                        {% elif wallet.currency == 'INR' %}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-muted">USD Value</span>
+                                <span class="text-success">
+                                    ${{ "{:,.2f}".format(wallet.balance / 83.12) }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if wallet.currency in ['BTC', 'ETH', 'USDT'] and prices %}
+                        {% for coin_id, data in prices.items() %}
+                            {% if (coin_id == 'bitcoin' and wallet.currency == 'BTC') or 
+                                  (coin_id == 'ethereum' and wallet.currency == 'ETH') or 
+                                  (coin_id == 'tether' and wallet.currency == 'USDT') %}
+                                {% set change = data.get('usd_24h_change', 0) %}
+                                <div class="mb-3">
+                                    <small class="text-muted">24h Change:</small>
+                                    <span class="badge bg-{{ 'success' if change >= 0 else 'danger' }} ms-2">
+                                        <i class="fas fa-{{ 'arrow-up' if change >= 0 else 'arrow-down' }} me-1"></i>
+                                        {{ "{:+.2f}".format(change) }}%
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        {% if wallet.balance > 0 %}
+                            <a href="{{ url_for('trading') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-exchange-alt me-2"></i>Trade
+                            </a>
+                            {% if wallet.currency in ['INR', 'USD'] %}
+                                <a href="{{ url_for('payments') }}" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Payment
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="fas fa-plus me-2"></i>Add Funds
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Current Market Prices -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line text-success me-2"></i>Current Market Prices
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cryptocurrency</th>
+                                    <th>Symbol</th>
+                                    <th>Price (USD)</th>
+                                    <th>Price (INR)</th>
+                                    <th>24h Change</th>
+                                    <th>Market Cap</th>
+                                    <th>Volume (24h)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if prices %}
+                                    {% for coin_id, data in prices.items() %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if coin_id == 'bitcoin' %}
+                                                    <i class="fab fa-bitcoin text-warning fa-lg me-2"></i>
+                                                    Bitcoin
+                                                {% elif coin_id == 'ethereum' %}
+                                                    <i class="fab fa-ethereum text-primary fa-lg me-2"></i>
+                                                    Ethereum
+                                                {% else %}
+                                                    <i class="fas fa-coins text-success fa-lg me-2"></i>
+                                                    Tether
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong>
+                                                {% if coin_id == 'bitcoin' %}BTC
+                                                {% elif coin_id == 'ethereum' %}ETH
+                                                {% else %}USDT{% endif %}
+                                            </strong>
+                                        </td>
+                                        <td>${{ "{:,.2f}".format(data.usd) }}</td>
+                                        <td>₹{{ "{:,.2f}".format(data.inr) }}</td>
+                                        <td>
+                                            {% set change = data.get('usd_24h_change', 0) %}
+                                            <span class="text-{{ 'success' if change >= 0 else 'danger' }}">
+                                                <i class="fas fa-{{ 'arrow-up' if change >= 0 else 'arrow-down' }} me-1"></i>
+                                                {{ "{:+.2f}".format(change) }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if data.get('usd_market_cap') %}
+                                                ${{ "{:,.0f}".format(data.usd_market_cap / 1000000) }}M
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.get('usd_24h_vol') %}
+                                                ${{ "{:,.0f}".format(data.usd_24h_vol / 1000000) }}M
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.wallet-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wallet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+</style>
+{% endblock %}

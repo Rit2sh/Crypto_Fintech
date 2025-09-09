@@ -8,3 +8,5 @@ psycopg2-binary
 PyMongo
 Werkzeug
 requests
+cachetools
+whitenoise
